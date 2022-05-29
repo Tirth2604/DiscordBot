@@ -17,9 +17,10 @@ load_dotenv()
 client = commands.Bot(command_prefix="$", intents=intents)
 
 # variables
-games = ["GTA V", "VALORENT", "GOD OF WAR", "HALO INFINITE", "CALL OF DUTY VANGUARD"]
+games = ["GTA V", "VALORENT", "GOD OF WAR", "HALO INFINITE", "CALL OF DUTY VANGUARD", "Sniper Elite 5", "Dolmen",
+         "V RISING", "ELDEN RING", "DYING LIGHT 2", "GOD OF WAR", "FORZA HORIZON 5"]
 help_info = [
-    "**COMMANDS**\n\n'inspire' TO GET RANDOM QUOTE\n\n'date?' TO GET CURRENT DATE\n\n'$github' TO SEARCH ACCOUNT ON GITHUB\n\n'joke' TO GET RANDOM JOKE\n\n'$clear' TO CLEAR MESSAGE "
+    "**COMMANDS**\n\n'inspire' TO GET RANDOM QUOTE\n\n'date' TO GET CURRENT DATE\n\n'$github' TO SEARCH ACCOUNT ON GITHUB\n\n'joke' TO GET RANDOM JOKE\n\n'$clear' TO CLEAR MESSAGE \n\n'$DoT_data' TO GET SERVER STATUS "
 ]
 
 
@@ -28,10 +29,10 @@ def get_quote():
     response = requests.get("https://zenquotes.io/api/random")  # random api to get a random quote
     json_data = json.loads(response.text)
     quote = json_data[0]['q'] + " \n-" + json_data[0]['a']
-    return (quote)
+    return quote
 
 
-# function to return github account
+# function to return GitHub account
 def github_search_user(user_name):
     response = urllib.request.urlopen("https://api.github.com/users/" + user_name)
     data = json.loads(response.read())
@@ -81,7 +82,7 @@ async def bot_status():
 # gives welcome message when someone joins the server
 @client.event
 async def on_member_join(member):
-    channel = client.get_channel(880848956282781787)
+    channel = client.get_channel(979107875408470016)
     embed = discord.Embed(title=f"Welcome {member.name}", description=f"Thanks for joining {member.guild.name}!")
     embed.set_thumbnail(url=member.avatar_url)
     await channel.send(embed=embed)
@@ -90,7 +91,7 @@ async def on_member_join(member):
 # gives goodbye message when someone leaves the server
 @client.event
 async def on_member_remove(member):
-    channel = client.get_channel(880848956282781787)
+    channel = client.get_channel(979107875408470016)
     embed = discord.Embed(title=f"Good bye {member.name}!!", description=f"I was such a pleasure to meet you :pray: ")
     await channel.send(embed=embed)
 
@@ -101,7 +102,7 @@ async def on_message(message):
         return
 
     if message.content.startswith('hello'):
-        await message.channel.send('Hello!')
+        await message.channel.send(f'Hello! {message.author}')
 
     # condition to return random Quotes
     if message.content.startswith('get a quote'):
@@ -113,7 +114,12 @@ async def on_message(message):
 
     # condition requesting current date-time
     if message.content.startswith('date'):
-        await message.channel.send(datetime.datetime.now())
+        emd_msg = discord.Embed(title="Date & Time", color=0x00ff00)
+        time = datetime.datetime.now().strftime("%H:%M:%S")
+        date = datetime.datetime.now().strftime("%d/%m/%Y")
+        emd_msg.add_field(name="Date", value=f"{date}", inline=True)
+        emd_msg.add_field(name="Time", value=f"{time}")
+        await message.channel.send(embed=emd_msg)
 
     # condition to return random jokes
     if message.content.startswith("joke"):
@@ -164,7 +170,7 @@ async def ban(ctx, member: discord.Member, *, reason=None):
 
 # command DM invite link to member
 @client.command(pass_context=True)
-async def DM(ctx, user: discord.Member):
+async def invite(ctx, user: discord.Member):
     link = await ctx.channel.create_invite(max_use=2)
     await ctx.send("invite sent")
     await user.send(link)
@@ -183,26 +189,29 @@ async def unban(ctx, *, member):
             await ctx.guild.unban(user)
             await ctx.send(f"unban {user.mention}#{user.discriminator}")
 
-            # await asyncio.gather(DM(ctx,user))
-
         return
 
 
 @client.command()
-async def community_report(ctx):
-    sentdex_guild = client.get_guild(880848955821424681)
+async def DoT_data(ctx):
+    offline = 0
     online = 0
     idle = 0
-    offline = 0
+    for member in ctx.guild.members:  # .members was added
 
-    for m in sentdex_guild.members:
-        if str(m.status) == "online":
-            online += 1
-        if str(m.status) == "offline":
+        if member.status == discord.Status.offline:
             offline += 1
+        elif member.status == discord.Status.online:
+            online += 1
         else:
             idle += 1
-    await ctx.channel.send(f"```Online: {online}.\nIdle/busy/dnd: {idle}.\nOffline: {offline}```")
+    embed = discord.Embed(title=ctx.guild.name + " Stats", color=0x000)
+    embed.add_field(name="Member Count", value=ctx.guild.member_count,inline=False)
+    embed.add_field(name="Online", value=f"{online} :green_circle:", inline=True)
+    embed.add_field(name="Offline", value=f"{offline} :red_circle:", inline=True)
+    embed.add_field(name="Idle", value=f"{idle} :yellow_circle:", inline=True)
+    await ctx.send(embed=embed)
+
 
 # keep_alive()
 bot = os.getenv("Token")
